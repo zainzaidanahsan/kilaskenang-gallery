@@ -97,6 +97,28 @@ function validatePayload(
   };
 }
 
+function serializeError(error: unknown) {
+  if (error instanceof Error) {
+    return JSON.stringify({
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      ...Object.fromEntries(
+        Object.getOwnPropertyNames(error).map((property) => [
+          property,
+          (error as unknown as Record<string, unknown>)[property],
+        ]),
+      ),
+    });
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
 export async function POST(request: Request) {
   let body: unknown;
 
@@ -112,6 +134,8 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  console.log("[api/create-session] Request body", body);
 
   const validation = validatePayload(body);
 
@@ -143,13 +167,17 @@ export async function POST(request: Request) {
     console.error("[api/create-session] Failed to create session metadata", {
       sessionId: validation.data.sessionId,
       error,
+      details: serializeError(error),
     });
 
-    return Response.json(
-      {
-        error: "Unable to create session",
-      },
-      { status: 500 },
-    );
+    const responseBody: { error: string; details?: string } = {
+      error: "Unable to create session",
+    };
+
+    if (process.env.NODE_ENV !== "production") {
+      responseBody.details = serializeError(error);
+    }
+
+    return Response.json(responseBody, { status: 500 });
   }
 }

@@ -27,12 +27,15 @@ export class SupabaseSessionWriter {
       gif_url: input.gifUrl,
     };
 
+    console.log("[session-writer] Supabase insert payload", sessionRow);
+
     const { error } = await supabase.from("sessions").insert(sessionRow);
 
     if (error) {
       console.error("[session-writer] Failed to insert session metadata", {
         sessionId: input.sessionId,
         error,
+        errorJson: JSON.stringify(error),
       });
 
       if ("code" in error && error.code === "23505") {
