@@ -2,9 +2,9 @@ export type PhotoBoothSession = {
   sessionId: string;
   projectName: string;
   createdAt: string;
+  photos: string[];
   stripUrl: string;
   gifUrl: string;
-  photos: string[];
 };
 
 export type SessionRepository = {
